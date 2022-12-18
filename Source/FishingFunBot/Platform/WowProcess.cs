@@ -12,6 +12,8 @@ namespace FishingFun
 {
     public static class WowProcess
     {
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)] // Addition for Shift autoloot
+        public static extern void keybd_event(uint bVk, uint bScan, uint dwFlags, uint dwExtraInfo);     // Addition for Shift autoloot
         public static ILog logger = LogManager.GetLogger("Fishbot");
 
         private const UInt32 WM_KEYDOWN = 0x0100;
@@ -30,7 +32,7 @@ namespace FishingFun
         //Get the wow-process, if success returns the process else null
         public static Process? Get(string name = "")
         {
-            var names = string.IsNullOrEmpty(name) ? new List<string> { "Wow", "WowClassic", "Wow-64" } : new List<string> { name };
+            var names = string.IsNullOrEmpty(name) ? new List<string> { "Wow", "WowClassic", "Wow-64", "World of Warcraft" } : new List<string> { name };
 
             var processList = Process.GetProcesses();
             foreach (var p in processList)
@@ -123,7 +125,7 @@ namespace FishingFun
                 Thread.Sleep(30 + random.Next(0, 47));
                 PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
 
-                RefocusOnOldScreen(logger, activeProcess, wowProcess, oldPosition);
+                //RefocusOnOldScreen(logger, activeProcess, wowProcess, oldPosition);
             }
         }
 
@@ -159,20 +161,21 @@ namespace FishingFun
             var wowProcess = WowProcess.Get();
             if (wowProcess != null)
             {
+                keybd_event(0xA0, 0, 0, 0);     // Addition for Shift autoloot; shift key set to ON
+
                 mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
                 var oldPosition = System.Windows.Forms.Cursor.Position;
-
                 Thread.Sleep(200);
                 System.Windows.Forms.Cursor.Position = position;
                 Thread.Sleep(LootDelay);
                 mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
                 Thread.Sleep(30 + random.Next(0, 47));
                 mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
-                RefocusOnOldScreen(logger, activeProcess, wowProcess, oldPosition);
+                //RefocusOnOldScreen(logger, activeProcess, wowProcess, oldPosition);
                 Thread.Sleep(LootDelay / 2);
             }
         }
-
+        /*
         private static void RefocusOnOldScreen(ILog logger, Process activeProcess, Process wowProcess, System.Drawing.Point oldPosition)
         {
             try
@@ -196,7 +199,7 @@ namespace FishingFun
                 logger.Error(ex.Message);
             }
         }
-
+        */
         [DllImport("user32.dll")]
         private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
 

@@ -1,3 +1,8 @@
+FishingFun source repository: https://github.com/julianperrott/FishingFun
+
+Modified to work TurtleWoW, maybe other patch 1.6 private servers
+
+------------------------------------------------------------------------
 
 # Fishing Fun - A World of Warcraft Bot
 
