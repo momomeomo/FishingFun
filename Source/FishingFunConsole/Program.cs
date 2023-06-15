@@ -22,12 +22,10 @@ namespace Powershell
                 pixelClassifier.Mode = PixelClassifier.ClassifierMode.Blue;
             }
 
-            pixelClassifier.SetConfiguration(WowProcess.IsWowClassic());
-
             var bobberFinder = new SearchBobberFinder(pixelClassifier);
             var biteWatcher = new PositionBiteWatcher(strikeValue);
 
-            var bot = new FishingBot(bobberFinder, biteWatcher, ConsoleKey.D4, new List<ConsoleKey> { ConsoleKey.D5 });
+            var bot = new FishingBot(bobberFinder, biteWatcher, ConsoleKey.D4);
             bot.FishingEventHandler += (b, e) => LogManager.GetLogger("Fishbot").Info(e);
 
             WowProcess.PressKey(ConsoleKey.Spacebar);

@@ -35,7 +35,6 @@ namespace FishingFun
 
             this.DataContext = LogEntries = new ObservableCollection<LogEntry>();
             this.pixelClassifier = new PixelClassifier();
-            pixelClassifier.SetConfiguration(WowProcess.IsWowClassic());
              
             this.bobberFinder = new SearchBobberFinder(pixelClassifier);
 
@@ -164,7 +163,7 @@ namespace FishingFun
 
         public void BotThread()
         {
-            bot = new FishingBot(bobberFinder, this.biteWatcher, KeyChooser.CastKey, new List<ConsoleKey> { ConsoleKey.D5, ConsoleKey.D6 });
+            bot = new FishingBot(bobberFinder, this.biteWatcher, KeyChooser.CastKey);
             bot.FishingEventHandler += FishingEventHandler;
             bot.Start();
 

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Drawing;
 
 #nullable enable
 
@@ -20,14 +21,7 @@ namespace FishingFun
         private const UInt32 WM_KEYUP = 0x0101;
         private static ConsoleKey lastKey;
         private static Random random = new Random();
-        public static int LootDelay=2000;
-
-
-        public static bool IsWowClassic()
-        {
-            var wowProcess = Get();
-            return wowProcess != null ? wowProcess.ProcessName.ToLower().Contains("classic") : false; ;
-        }
+        public static int LootDelay=1000;
 
         //Get the wow-process, if success returns the process else null
         public static Process? Get(string name = "")
@@ -83,7 +77,7 @@ namespace FishingFun
         public static void PressKey(ConsoleKey key)
         {
             KeyDown(key);
-            Thread.Sleep(50 + random.Next(0, 75));
+            Thread.Sleep(30 + random.Next(0, 50));
             KeyUp(key);
         }
 
@@ -102,57 +96,7 @@ namespace FishingFun
 
         public static void RightClickMouse(ILog logger, System.Drawing.Point position)
         {
-            //RightClickMouse_Original(logger, position);
             RightClickMouse_LiamCooper(logger, position);
-        }
-
-        public static void RightClickMouse_Original(ILog logger, System.Drawing.Point position)
-        {
-            var activeProcess = GetActiveProcess();
-            var wowProcess = WowProcess.Get();
-            if (wowProcess != null)
-            {
-                var oldPosition = System.Windows.Forms.Cursor.Position;
-
-                for (int i = 20; i > 0; i--)
-                {
-                    SetCursorPos(position.X + i, position.Y + i);
-                    Thread.Sleep(1);
-                }
-                Thread.Sleep(1000);
-
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONDOWN, Keys.VK_RMB, 0);
-                Thread.Sleep(30 + random.Next(0, 47));
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
-
-                //RefocusOnOldScreen(logger, activeProcess, wowProcess, oldPosition);
-            }
-        }
-
-        public static void RightClickMouse()
-        {
-            var activeProcess = GetActiveProcess();
-            var wowProcess = WowProcess.Get();
-            if (wowProcess != null)
-            {
-                var oldPosition = System.Windows.Forms.Cursor.Position;
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONDOWN, Keys.VK_RMB, 0);
-                Thread.Sleep(30 + random.Next(0, 47));
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
-            }
-        }
-
-        public static void LeftClickMouse()
-        {
-            var activeProcess = GetActiveProcess();
-            var wowProcess = WowProcess.Get();
-            if (wowProcess != null)
-            {
-                var oldPosition = System.Windows.Forms.Cursor.Position;
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_LBUTTONDOWN, Keys.VK_RMB, 0);
-                Thread.Sleep(30 + random.Next(0, 47));
-                PostMessage(wowProcess.MainWindowHandle, Keys.WM_LBUTTONUP, Keys.VK_RMB, 0);
-            }
         }
 
         public static void RightClickMouse_LiamCooper(ILog logger, System.Drawing.Point position)
@@ -161,45 +105,23 @@ namespace FishingFun
             var wowProcess = WowProcess.Get();
             if (wowProcess != null)
             {
-                keybd_event(0xA0, 0, 0, 0);     // Addition for Shift autoloot; shift key set to ON
-
-                mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
                 var oldPosition = System.Windows.Forms.Cursor.Position;
                 Thread.Sleep(200);
+                position.Offset(-25, 25);
                 System.Windows.Forms.Cursor.Position = position;
-                Thread.Sleep(LootDelay);
+                
+                // Addition for Shift autoloot; shift key set to ON
+                // Pressing shift sometimes does not set it to off
+                // TODO: Figure out how to use ConsoleModifiers/ConsoleKeys to do this better I guess
+                keybd_event(0xA0, 0, 0, 0);
+
                 mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
-                Thread.Sleep(30 + random.Next(0, 47));
+                Thread.Sleep(30 + random.Next(0, 50));
                 mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
-                //RefocusOnOldScreen(logger, activeProcess, wowProcess, oldPosition);
-                Thread.Sleep(LootDelay / 2);
+                Thread.Sleep(200);
             }
         }
-        /*
-        private static void RefocusOnOldScreen(ILog logger, Process activeProcess, Process wowProcess, System.Drawing.Point oldPosition)
-        {
-            try
-            {
-                if (activeProcess.MainWindowTitle != wowProcess.MainWindowTitle)
-                {
-                    // get focus back on this screen
-                    PostMessage(activeProcess.MainWindowHandle, Keys.WM_RBUTTONDOWN, Keys.VK_RMB, 0);
-                    Thread.Sleep(30);
-                    PostMessage(activeProcess.MainWindowHandle, Keys.WM_RBUTTONUP, Keys.VK_RMB, 0);
 
-                    KeyDown(ConsoleKey.Escape);
-                    Thread.Sleep(30);
-                    KeyUp(ConsoleKey.Escape);
-
-                    System.Windows.Forms.Cursor.Position = oldPosition;
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex.Message);
-            }
-        }
-        */
         [DllImport("user32.dll")]
         private static extern void mouse_event(int dwFlags, int dx, int dy, int dwData, int dwExtraInfo);
 
