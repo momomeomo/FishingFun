@@ -1,9 +1,9 @@
 ﻿using log4net;
 using System;
-using System.Linq;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Linq;
+using System.Collections.Generic;
 using System.Threading;
 using System.Drawing;
 
@@ -41,6 +41,9 @@ namespace FishingFun
 
             return null;
         }
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
         public static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
@@ -105,11 +108,12 @@ namespace FishingFun
             var wowProcess = WowProcess.Get();
             if (wowProcess != null)
             {
+                SetForegroundWindow(wowProcess.MainWindowHandle);
                 var oldPosition = System.Windows.Forms.Cursor.Position;
-                Thread.Sleep(200);
+                Thread.Sleep(500);
                 position.Offset(-25, 25);
                 System.Windows.Forms.Cursor.Position = position;
-                
+
                 // Addition for Shift autoloot; shift key set to ON
                 // Pressing shift sometimes does not set it to off
                 // TODO: Figure out how to use ConsoleModifiers/ConsoleKeys to do this better I guess
@@ -118,7 +122,7 @@ namespace FishingFun
                 mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
                 Thread.Sleep(30 + random.Next(0, 50));
                 mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
-                Thread.Sleep(200);
+                Thread.Sleep(500);
             }
         }
 
