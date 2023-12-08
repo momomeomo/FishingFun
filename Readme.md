@@ -1,3 +1,5 @@
+<b>stopped playing so stopped developing srry prob still works</b>
+
 FishingFun source repository: https://github.com/julianperrott/FishingFun
 
 Modified to work TurtleWoW, maybe other patch 1.6 private servers
