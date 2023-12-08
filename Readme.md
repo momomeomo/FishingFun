@@ -1,4 +1,4 @@
-<b>stopped playing so stopped developing srry prob still works</b>
+# <b>stopped playing so stopped developing srry prob still works</b>
 
 FishingFun source repository: https://github.com/julianperrott/FishingFun
 
