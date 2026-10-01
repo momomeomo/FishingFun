@@ -43,12 +43,9 @@ namespace FishingFun
                     pos.X = i;
                     pos.Y = j;
                     var colorAt = WowScreen.GetColorAt(pos, bmp);
-                    if (colorAt.R > targetRedLb &&
-                        colorAt.R < targetRedHb &&
-                        colorAt.B > targetBlueLb &&
-                        colorAt.B < targetBlueHb &&
-                        colorAt.G > targetGreenLb &&
-                        colorAt.G < targetGreenHb)
+                    if (Math.Abs(colorAt.R - targetColor.R) < targetOffset &&
+                        Math.Abs(colorAt.G - targetColor.G) < targetOffset &&
+                        Math.Abs(colorAt.B - targetColor.B) < targetOffset)
                     {
                         BitmapEvent?.Invoke(this, new BobberBitmapEvent { Point = new Point(i, j), Bitmap = bmp });
                         return WowScreen.GetScreenPositionFromBitmapPostion(pos);

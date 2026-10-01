@@ -31,7 +31,7 @@ namespace FishingFun
             var processList = Process.GetProcesses();
             foreach (var p in processList)
             {
-                if (names.Select(s => s.ToLower()).Contains(p.ProcessName.ToLower()))
+                if (names.Any(name => string.Equals(name, p.ProcessName, StringComparison.OrdinalIgnoreCase)))
                 {
                     return p;
                 }
@@ -117,7 +117,8 @@ namespace FishingFun
                 // Addition for Shift autoloot; shift key set to ON
                 // Pressing shift sometimes does not set it to off
                 // TODO: Figure out how to use ConsoleModifiers/ConsoleKeys to do this better I guess
-                keybd_event(0xA0, 0, 0, 0);
+                
+                // keybd_event(0xA0, 0, 0, 0); // DISABLE FOR WOWs WITH AUTOLOOT ON BY DEFAULT OR IT WILL MESS UP THE RIGHT CLICK
 
                 mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
                 Thread.Sleep(30 + random.Next(0, 50));
