@@ -109,7 +109,7 @@ namespace FishingFun
 
                 if (this.biteWatcher.IsBite(currentBobberPosition))
                 {
-                    Loot(bobberPosition);
+                    Loot(currentBobberPosition);
                     return;
                 }
 
@@ -140,17 +140,17 @@ namespace FishingFun
 
         public static void FlushBuffers()
         {
-            ILog log = LogManager.GetLogger("Fishbot");
-            var logger = log.Logger as Logger;
-            if (logger != null)
+            var logger = LogManager.GetLogger("Fishbot").Logger as Logger;
+            if (logger == null)
             {
-                foreach (IAppender appender in logger.Appenders)
+                return;
+            }
+
+            foreach (var appender in logger.Appenders)
+            {
+                if (appender is BufferingAppenderSkeleton buffered)
                 {
-                    var buffered = appender as BufferingAppenderSkeleton;
-                    if (buffered != null)
-                    {
-                        buffered.Flush();
-                    }
+                    buffered.Flush();
                 }
             }
         }

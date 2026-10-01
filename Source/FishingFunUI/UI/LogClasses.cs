@@ -32,13 +32,7 @@ namespace FishingFun
         protected virtual void OnPropertyChanged(string propertyName)
         {
             Application.Current.Dispatcher.BeginInvoke((Action)(() =>
-            {
-                if (PropertyChanged != null)
-                {
-                    PropertyChangedEventHandler handler = PropertyChanged;
-                    if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
-                }
-            }));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName))));
         }
     }
 }

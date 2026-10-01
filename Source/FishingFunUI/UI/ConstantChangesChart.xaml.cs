@@ -91,28 +91,22 @@ namespace FishingFun
             this.ChartValues2.Clear();
             this.ChartValues3.Clear();
 
-            ChartValues2.Add(new MeasureModel
+            AddGuidePoints(ChartValues2, 0);
+            AddGuidePoints(ChartValues3, -7);
+        }
+
+        private static void AddGuidePoints(ChartValues<MeasureModel> values, double value)
+        {
+            values.Add(new MeasureModel
             {
                 DateTime = DateTime.Now.AddSeconds(-12),
-                Value = 0
+                Value = value
             });
 
-            ChartValues2.Add(new MeasureModel
+            values.Add(new MeasureModel
             {
                 DateTime = DateTime.Now.AddSeconds(25),
-                Value = 0
-            });
-
-            ChartValues3.Add(new MeasureModel
-            {
-                DateTime = DateTime.Now.AddSeconds(-12),
-                Value = -7
-            });
-
-            ChartValues3.Add(new MeasureModel
-            {
-                DateTime = DateTime.Now.AddSeconds(25),
-                Value = -7
+                Value = value
             });
         }
 
@@ -156,8 +150,7 @@ namespace FishingFun
 
         protected virtual void OnPropertyChanged(string propertyName)
         {
-            if (PropertyChanged != null)
-                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         #endregion INotifyPropertyChanged implementation

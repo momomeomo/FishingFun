@@ -1,11 +1,13 @@
-﻿using log4net;
+﻿using FishingFun;
+using log4net;
+using log4net.Repository.Hierarchy;
 using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Linq;
 using System.Collections.Generic;
-using System.Threading;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 #nullable enable
 
@@ -102,29 +104,54 @@ namespace FishingFun
             RightClickMouse_LiamCooper(logger, position);
         }
 
-        public static void RightClickMouse_LiamCooper(ILog logger, System.Drawing.Point position)
+        public static void RightClickMouse_LiamCooper(ILog logger, Point position)
         {
-            var activeProcess = GetActiveProcess();
-            var wowProcess = WowProcess.Get();
-            if (wowProcess != null)
+            var wowProcess = Get();
+            if (wowProcess == null || wowProcess.MainWindowHandle == IntPtr.Zero)
             {
-                SetForegroundWindow(wowProcess.MainWindowHandle);
-                var oldPosition = System.Windows.Forms.Cursor.Position;
-                Thread.Sleep(500);
-                position.Offset(-25, 25);
-                System.Windows.Forms.Cursor.Position = position;
-
-                // Addition for Shift autoloot; shift key set to ON
-                // Pressing shift sometimes does not set it to off
-                // TODO: Figure out how to use ConsoleModifiers/ConsoleKeys to do this better I guess
-                
-                // keybd_event(0xA0, 0, 0, 0); // DISABLE FOR WOWs WITH AUTOLOOT ON BY DEFAULT OR IT WILL MESS UP THE RIGHT CLICK
-
-                mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
-                Thread.Sleep(30 + random.Next(0, 50));
-                mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
-                Thread.Sleep(500);
+                logger?.Warn("Cannot loot: the WoW window was not found.");
+                return;
             }
+
+            var wowWindow = wowProcess.MainWindowHandle;
+
+            var activationRequested = SetForegroundWindow(wowWindow);
+            Thread.Sleep(100);
+
+            var foregroundWindow = GetForegroundWindow();
+            uint foregroundProcessId = 0;
+
+            if (foregroundWindow != IntPtr.Zero)
+            {
+                GetWindowThreadProcessId(foregroundWindow, out foregroundProcessId);
+            }
+
+            if (foregroundProcessId != (uint)wowProcess.Id)
+            {
+                logger?.Warn(
+                    $"Cannot loot: WoW is not foreground. " +
+                    $"SetForegroundWindow returned {activationRequested}; " +
+                    $"foreground process ID is {foregroundProcessId}, expected {wowProcess.Id}.");
+                return;
+            }
+
+            if (!SetCursorPos(position.X, position.Y))
+            {
+                logger?.Warn($"Cannot move the cursor to {position}.");
+                return;
+            }
+
+            mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
+            try
+            {
+                Thread.Sleep(30 + random.Next(0, 50));
+            }
+            finally
+            {
+                mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
+            }
+
+            Thread.Sleep(500);
         }
 
         [DllImport("user32.dll")]
