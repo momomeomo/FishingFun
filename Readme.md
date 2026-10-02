@@ -1,65 +1,10 @@
-# <b>stopped playing so stopped developing srry prob still works</b>
+# <b>stopped developing srry prob still works</b>
 
 FishingFun source repository: https://github.com/julianperrott/FishingFun
 
-Modified to work TurtleWoW, maybe other patch 1.6 private servers
+Modified FishingFun please check the original instead
 
-------------------------------------------------------------------------
-
-# Fishing Fun - A World of Warcraft Bot
-
-In World of Warcraft, Fishing is a time consuming task which is simple and so lends itself to automation very well. There are many fishing bots out there. This article describes the bot that I wrote for fun and the problems I solved to make it work.
-
-### Why Fish ?
-
-Fishing is a way to catch fish which can be used to cook food, which is used to heal or increase the stats of your character. You can also gain achievements through fishing. 
-
-The mechanics of fishing involve casting your line into in-land or sea waters and then waiting up to 30 seconds for a bite, then clicking to loot within a couple of seconds to catch the fish.
-
-## Video of the bot in action
-
-https://www.youtube.com/watch?v=T6reHXxA5f0
-
-[![Fishing Fun YouTube](https://img.youtube.com/vi/T6reHXxA5f0/0.jpg)](https://www.youtube.com/watch?v=T6reHXxA5f0)
-
-# Getting it working
-
-## 1. Download this repository
-
-Put the contents of the repo into a folder. e.g "C:\FishingFun". I am going to refer to this folder from now on, so just substitute your own folder path.
-
-## 2. Install Visual Studio
-
-You will need to install Visual Studio, get it here: https://visualstudio.microsoft.com/vs/ use Community 2019 or later.
-- Under 'Desktop & mobile' - Select .Net desktop development.
-- Here is a video which shows installation (note you don't need python) https://www.youtube.com/watch?v=1uBESL2S8Ik&ab_channel=JonJensen
-
-Requires: Dot net framework 4.7 https://dotnet.microsoft.com/download/dotnet-framework, this should automatically be installed with visual studio.
-
-## 3. Build and run the Bot
-
-Double click on the solution file to open it: "C:\FishingFun\source\FishingFun.sln", or open it from visual studio.
-
-Once loaded click the Start button, this should build and run the project FishingFun.UI. Alternatively use F5 or menu 'Debug -> Start Debugging'.
-
-Once it has built you can run it without visual studio by navigating with File Explorer to folder C:\FishingFun\Source\bin\Debug and run by double clicking on Chrome.exe
-
-If you want run a version without a GUI you need to set the startup project in visual studio to FishingFun.Console by right clicking on the project in the Solution Explorer and choosing 'Set as startup project', then build (F6). You should now have C:\FishingFun\Source\bin\Debug\powershell.exe which you can run outside of visual studio.
-
-## 4. Bot Running Instructions
-
-* Enable 'Autoloot' (Esc, Interface Options, Controls, Check Autoloot)
-* Turn off Click to move (Esc, Interface Options, Mouse, Uncheck Click to move)
-* Make sure 'Right Click' loots.
-* Put the cast fishing Button on poistion 4 of your Action Bar. I.e. when 4 is clicked fishing will cast.
-* Zoom in completely so your character is not visible.
-* Make sure the fishing float is in the middle of the screen.
-* Fish at close to ground level as you can, not off docks or other high places.
-* It requires that WOW is running Full screen (not windowed) on the primary screen. It needs the wow screen to be on top. So it probably won't work well if you only have one screen. If you need it windowed then I suggest you look at the code in this fork: https://github.com/petrvecera/FishingFun
-* Sometimes you may need to adjust the colour parameters for the bobber finder, such as during evening time or if there is a lot of red in the landscape.
-
-----
-
+-----------------------------------------------------------------------
 ## Fishing in Lava
 
 To get the 'Fire Ammonite Angler' achievement you need to fish in Lava. Lava is red making it impossible to see the red feather, so you need to switch to the blue feather. On the main page click the orange configuration button, then change the 'Watch Feather' combo from Red to 'Blue'
@@ -70,23 +15,6 @@ Use a macro like this on your fishing key:
         /cast Fishing
 
 ![Fishing in Lava](/post/img/lava.png)
-
-## All about the bot
-
-### To catch fish, what would a bot have to do ?
-
-The bot needs to transition through the following states:
-
-* Casting.
-* Watching the bobber for a bite. If a bite is seen then move to Looting. If the bobber is not seen for a few seconds or 30 seconds elapses then move back to the casting state.
-* Looting.
-
-### What problems are there to solve ?
-
-The main problems are: 
-
-* Finding the coordinates of the bobber on the screen.
-* Then determining when a bite has taken place.
 
 #### Problem 1: Finding the bobber
 
