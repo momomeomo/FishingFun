@@ -1,5 +1,4 @@
-# <b>stopped developing srry prob still works</b>
-
+Check out the original for a more polished product
 FishingFun source repository: https://github.com/julianperrott/FishingFun
 
 Modified FishingFun please check the original instead
