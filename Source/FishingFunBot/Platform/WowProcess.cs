@@ -141,7 +141,9 @@ namespace FishingFun
                 return;
             }
 
+            keybd_event(0xA0, 0, 0, 0); // LEFT SHIFT DOWN - DISABLE FOR WOWs WITH AUTOLOOT ON BY DEFAULT OR IT WILL MESS UP THE RIGHT CLICK
             mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
+
             try
             {
                 Thread.Sleep(30 + random.Next(0, 50));
@@ -149,6 +151,7 @@ namespace FishingFun
             finally
             {
                 mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
+                keybd_event(0xA0, 0, 0x0002, 0); // LEFT SHIFT RELEASE - DISABLE FOR WOWs WITH AUTOLOOT ON BY DEFAULT OR IT WILL MESS UP THE RIGHT CLICK
             }
 
             Thread.Sleep(500);
