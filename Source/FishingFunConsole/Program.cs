@@ -13,7 +13,7 @@ namespace Powershell
         {
             log4net.Config.XmlConfigurator.Configure(new FileStream("log4net.config", FileMode.Open));
 
-            int strikeValue = 7;
+            int strikeValue = 6;
 
             var pixelClassifier = new PixelClassifier();
             if (args.Contains("blue"))

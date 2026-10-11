@@ -23,7 +23,17 @@ namespace FishingFun
         private const UInt32 WM_KEYUP = 0x0101;
         private static ConsoleKey lastKey;
         private static Random random = new Random();
-        public static int LootDelay=1000;
+        public static int LootDelay = 1000;
+
+        // selectable loot method
+        public enum LootMethod
+        {
+            LiamCooper, // current implementation that toggles shift during right-click
+            NoShift     // right-click without modifying shift
+        }
+
+        // default loot method
+        public static LootMethod LootMethodSetting = LootMethod.LiamCooper;
 
         //Get the wow-process, if success returns the process else null
         public static Process? Get(string name = "")
@@ -99,61 +109,66 @@ namespace FishingFun
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool SetCursorPos(int x, int y);
 
+        // public entry - delegates to the currently selected loot method (option available in UI)
         public static void RightClickMouse(ILog logger, System.Drawing.Point position)
         {
-            RightClickMouse_LiamCooper(logger, position);
+            switch (LootMethodSetting)
+            {
+                case LootMethod.NoShift:
+                    RightClickMouse_NoShift(logger, position);
+                    break;
+                case LootMethod.LiamCooper:
+                default:
+                    RightClickMouse_LiamCooper(logger, position);
+                    break;
+            }
         }
 
+        // Helper: ensure WoW window is foreground and cursor set; returns false if any step fails
+        private static bool PrepareWindowAndCursor(Process? wowProcess, Point position, ILog? logger)
+        {
+            if (wowProcess == null || wowProcess.MainWindowHandle == IntPtr.Zero) { logger?.Warn("Cannot loot: the WoW window was not found."); return false; }
+            var wowWindow = wowProcess.MainWindowHandle;
+            var activationRequested = SetForegroundWindow(wowWindow);
+            Thread.Sleep(100);
+            var foregroundWindow = GetForegroundWindow();
+            uint foregroundProcessId = 0;
+            if (foregroundWindow != IntPtr.Zero) { GetWindowThreadProcessId(foregroundWindow, out foregroundProcessId); }
+            if (foregroundProcessId != (uint)wowProcess.Id)
+            {
+                logger?.Warn($"Cannot loot: WoW is not foreground. SetForegroundWindow returned {activationRequested}; foreground process ID is {foregroundProcessId}, expected {wowProcess.Id}.");
+                return false;
+            }
+            if (!SetCursorPos(position.X, position.Y)) { logger?.Warn($"Cannot move the cursor to {position}."); return false; }
+            return true;
+        }
+
+        // original implementation (presses shift down during right click)
         public static void RightClickMouse_LiamCooper(ILog logger, Point position)
         {
             var wowProcess = Get();
-            if (wowProcess == null || wowProcess.MainWindowHandle == IntPtr.Zero)
-            {
-                logger?.Warn("Cannot loot: the WoW window was not found.");
-                return;
-            }
+            if (!PrepareWindowAndCursor(wowProcess, position, logger)) return;
 
-            var wowWindow = wowProcess.MainWindowHandle;
-
-            var activationRequested = SetForegroundWindow(wowWindow);
-            Thread.Sleep(100);
-
-            var foregroundWindow = GetForegroundWindow();
-            uint foregroundProcessId = 0;
-
-            if (foregroundWindow != IntPtr.Zero)
-            {
-                GetWindowThreadProcessId(foregroundWindow, out foregroundProcessId);
-            }
-
-            if (foregroundProcessId != (uint)wowProcess.Id)
-            {
-                logger?.Warn(
-                    $"Cannot loot: WoW is not foreground. " +
-                    $"SetForegroundWindow returned {activationRequested}; " +
-                    $"foreground process ID is {foregroundProcessId}, expected {wowProcess.Id}.");
-                return;
-            }
-
-            if (!SetCursorPos(position.X, position.Y))
-            {
-                logger?.Warn($"Cannot move the cursor to {position}.");
-                return;
-            }
-
-            keybd_event(0xA0, 0, 0, 0); // LEFT SHIFT DOWN - DISABLE FOR WOWs WITH AUTOLOOT ON BY DEFAULT OR IT WILL MESS UP THE RIGHT CLICK
+            keybd_event(0xA0, 0, 0, 0); // LEFT SHIFT DOWN
             mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
-
-            try
-            {
-                Thread.Sleep(30 + random.Next(0, 50));
-            }
+            try { Thread.Sleep(30 + random.Next(0, 50)); }
             finally
             {
                 mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0);
-                keybd_event(0xA0, 0, 0x0002, 0); // LEFT SHIFT RELEASE - DISABLE FOR WOWs WITH AUTOLOOT ON BY DEFAULT OR IT WILL MESS UP THE RIGHT CLICK
+                keybd_event(0xA0, 0, 0x0002, 0); // LEFT SHIFT RELEASE
             }
+            Thread.Sleep(500);
+        }
 
+        // alternate implementation: right click without touching shift key
+        public static void RightClickMouse_NoShift(ILog logger, Point position)
+        {
+            var wowProcess = Get();
+            if (!PrepareWindowAndCursor(wowProcess, position, logger)) return;
+
+            mouse_event((int)MouseEventFlags.RightDown, position.X, position.Y, 0, 0);
+            try { Thread.Sleep(30 + random.Next(0, 50)); }
+            finally { mouse_event((int)MouseEventFlags.RightUp, position.X, position.Y, 0, 0); }
             Thread.Sleep(500);
         }
 

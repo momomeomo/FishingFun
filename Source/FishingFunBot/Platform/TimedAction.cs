@@ -5,19 +5,13 @@ namespace FishingFun
 {
     public class TimedAction
     {
-        public int actionTimeoutMs;
-        public int maxTimeSecs;
-        public Action<TimedAction> action;
+        public readonly int actionTimeoutMs;
+        public readonly int maxTimeSecs;
+        public readonly Action<TimedAction> action;
         public Stopwatch stopwatch = new Stopwatch();
         public Stopwatch maxTime = new Stopwatch();
 
-        public int ElapsedSecs
-        {
-            get
-            {
-                return (int)maxTime.Elapsed.TotalSeconds;
-            }
-        }
+        public int ElapsedSecs => (int)maxTime.Elapsed.TotalSeconds;
 
         public TimedAction(Action<TimedAction> action, int actionTimeoutMs, int maxTimeSecs)
         {
@@ -28,21 +22,13 @@ namespace FishingFun
             maxTime.Start();
         }
 
-        public void ExecuteNow()
-        {
-            action(this);
-        }
+        public void ExecuteNow() => action(this);
 
         public bool ExecuteIfDue()
         {
-            if (stopwatch.Elapsed.TotalMilliseconds > actionTimeoutMs)
-            {
-                action(this);
-                stopwatch.Reset();
-                stopwatch.Start();
-            }
-
-            return maxTime.Elapsed.TotalSeconds < maxTimeSecs;
+            if (stopwatch.Elapsed.TotalMilliseconds > actionTimeoutMs) { action(this); stopwatch.Reset(); stopwatch.Start(); }
+            // return true while within the allowed max time (use <= to include the final second)
+            return maxTime.Elapsed.TotalSeconds <= maxTimeSecs;
         }
     }
 }

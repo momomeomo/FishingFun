@@ -77,6 +77,22 @@
                         <local:KeyBindChooser x:Name="KeyChooser" />
                     </Grid>
                 </Button>
+
+                <!-- existing loot method chooser -->
+                <ComboBox x:Name="LootMethodChooser" Width="170" Height="28" Margin="10,10,0,0" VerticalAlignment="Center" SelectionChanged="LootMethod_SelectionChanged">
+                    <ComboBoxItem Tag="LiamCooper">LiamCooper (uses SHIFT during right-click)</ComboBoxItem>
+                    <ComboBoxItem Tag="NoShift">No SHIFT (simple right-click)</ComboBoxItem>
+                </ComboBox>
+
+                <!-- NEW: tuning controls -->
+                <StackPanel Orientation="Horizontal" Margin="10,6,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Strike:" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox x:Name="StrikeValueBox" Width="40" Text="6" VerticalAlignment="Center" />
+                    <TextBlock Text="Sens:" VerticalAlignment="Center" Margin="8,0,6,0"/>
+                    <TextBox x:Name="SensitivityBox" Width="50" Text="1.0" VerticalAlignment="Center" />
+                    <TextBlock Text="Wait(s):" VerticalAlignment="Center" Margin="8,0,6,0"/>
+                    <TextBox x:Name="WaitTimeoutBox" Width="40" Text="30" VerticalAlignment="Center" />
+                </StackPanel>
             </WrapPanel>
         </materialDesign:Card>
 

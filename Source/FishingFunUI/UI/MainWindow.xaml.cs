@@ -5,11 +5,12 @@ namespace FishingFun
     using log4net.Core;
     using log4net.Repository.Hierarchy;
     using System;
-    using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.Timers;
     using System.Windows;
     using System.Windows.Controls;
+    using System.Globalization;
+    using System.Windows.Media;
 
     public partial class MainWindow : Window, IAppender
     {
@@ -18,12 +19,20 @@ namespace FishingFun
 
         private IBobberFinder bobberFinder;
         private IPixelClassifier pixelClassifier;
-        private IBiteWatcher biteWatcher;
+        private IBiteWatcher? biteWatcher; // created when starting the bot
         private ReticleDrawer reticleDrawer = new ReticleDrawer();
 
         private FishingBot? bot;
-        private int strikeValue = 7; // this is the depth the bobber must go for the bite to be detected
-        private bool setImageBackgroundColour = true;
+
+        // strike depth (pixels) required for a bite; lower = more sensitive
+        private int strikeValue = 6;
+
+        // sensitivity multiplier applied to strikeValue (values < 1.0 are more sensitive)
+        private double sensitivity = 1.0;
+
+        // wait timeout in seconds used by the bot when waiting for a bite
+        private int waitTimeoutSecs = 30;
+
         private Timer WindowSizeChangedTimer;
         private System.Threading.Thread? botThread;
 
@@ -44,7 +53,7 @@ namespace FishingFun
                 imageProvider.BitmapEvent += ImageProvider_BitmapEvent;
             }
 
-            this.biteWatcher = new PositionBiteWatcher(strikeValue);
+            // biteWatcher will be created when the bot is started so we can use the UI settings
 
             this.WindowSizeChangedTimer = new Timer { AutoReset = false, Interval = 100 };
             this.WindowSizeChangedTimer.Elapsed += SizeChangedTimer_Elapsed;
@@ -56,11 +65,25 @@ namespace FishingFun
                 this.Settings.Focus();
                 this.bot?.SetCastKey(this.KeyChooser.CastKey);
             };
+
+            // initialize the LootMethod chooser to the current setting
+            this.LootMethodChooser.SelectedIndex = WowProcess.LootMethodSetting == WowProcess.LootMethod.LiamCooper ? 0 : 1;
+
+            // initialize UI boxes with defaults
+            this.StrikeValueBox.Text = this.strikeValue.ToString();
+            this.SensitivityBox.Text = this.sensitivity.ToString("F1", CultureInfo.InvariantCulture);
+            this.WaitTimeoutBox.Text = this.waitTimeoutSecs.ToString();
+        }
+
+        // Helper to marshal UI updates to the UI thread.
+        private void Dispatch(Action action)
+        {
+            if (this.Dispatcher.CheckAccess()) action();
+            else this.Dispatcher.Invoke(action);
         }
 
         private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            // Reset the timer so it only fires 100ms after the user stop dragging the window.
             WindowSizeChangedTimer.Stop();
             WindowSizeChangedTimer.Start();
         }
@@ -109,7 +132,7 @@ namespace FishingFun
                         this.Chart.ClearChart();
                         this.LootingGrid.Visibility = Visibility.Collapsed;
                         this.flyingFishAnimation.Stop();
-                        setImageBackgroundColour = true;
+                        // previously we toggled a flag to set background once; simplified to always keep black background
                         break;
                 };
             });
@@ -147,6 +170,18 @@ namespace FishingFun
         {
             if (bot == null)
             {
+                // parse tuning controls (UI -> fields) before starting the bot thread
+                if (!int.TryParse(this.StrikeValueBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var sv)) sv = this.strikeValue;
+                if (!double.TryParse(this.SensitivityBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out var sens)) sens = this.sensitivity;
+                if (!int.TryParse(this.WaitTimeoutBox.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var wts)) wts = this.waitTimeoutSecs;
+
+                this.strikeValue = Math.Max(1, sv);
+                this.sensitivity = Math.Max(0.1, sens);
+                this.waitTimeoutSecs = Math.Max(5, wts);
+
+                // create a bite watcher configured from the UI values
+                this.biteWatcher = new PositionBiteWatcher(this.strikeValue, this.sensitivity);
+
                 WowProcess.PressKey(ConsoleKey.Spacebar);
                 System.Threading.Thread.Sleep(1500);
 
@@ -163,12 +198,24 @@ namespace FishingFun
 
         public void BotThread()
         {
-            bot = new FishingBot(bobberFinder, this.biteWatcher, KeyChooser.CastKey);
+            if (this.biteWatcher == null) return;
+
+            bot = new FishingBot(bobberFinder, this.biteWatcher, KeyChooser.CastKey)
+            {
+                WaitForBiteTimeoutMs = this.waitTimeoutSecs * 1000
+            };
+
             bot.FishingEventHandler += FishingEventHandler;
             bot.Start();
 
             bot = null;
             SetButtonStates(true);
+        }
+
+        private void LootMethod_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LootMethodChooser == null) return;
+            WowProcess.LootMethodSetting = LootMethodChooser.SelectedIndex == 0 ? WowProcess.LootMethod.LiamCooper : WowProcess.LootMethod.NoShift;
         }
 
         private void ImageProvider_BitmapEvent(object sender, BobberBitmapEvent e)
@@ -179,23 +226,26 @@ namespace FishingFun
                 reticleDrawer.Draw(e.Bitmap, e.Point);
                 var bitmapImage = e.Bitmap.ToBitmapImage();
                 e.Bitmap.Dispose();
+
+                // update the UI image
                 this.Screenshot.Source = bitmapImage;
+
+                // update the lastPoint used for info display
+                lastPoint = e.Point;
             });
         }
 
+        // Keep the preview background black.
         private void SetBackgroundImageColour(BobberBitmapEvent e)
         {
-            if (this.setImageBackgroundColour)
+            try
             {
-                this.setImageBackgroundColour = false;
-                this.ImageBackground.Background = e.Bitmap.GetBackgroundColourBrush();
+                this.ImageBackground.Background = Brushes.Black;
             }
-        }
-
-        private void Dispatch(Action action)
-        {
-            Application.Current?.Dispatcher.BeginInvoke((Action)(() => action()));
-            Application.Current?.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Background, new Action(delegate { }));
+            catch
+            {
+                // ignore UI errors
+            }
         }
     }
 }

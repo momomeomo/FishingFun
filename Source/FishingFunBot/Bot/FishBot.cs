@@ -22,6 +22,9 @@ namespace FishingFun
 
         public event EventHandler<FishingEvent> FishingEventHandler;
 
+        // Configurable timeout (milliseconds) used when waiting for a bite
+        public int WaitForBiteTimeoutMs { get; set; } = 30 * 1000;
+
         public FishingBot(IBobberFinder bobberFinder, IBiteWatcher biteWatcher, ConsoleKey castKey)
         {
             this.bobberFinder = bobberFinder;
@@ -99,7 +102,8 @@ namespace FishingFun
 
             logger.Info("Bobber start position: " + bobberPosition);
 
-            var timedTask = new TimedAction((a) => { logger.Info("Fishing timed out!"); }, 25 * 1000, 25);
+            var waitTimeoutMs = this.WaitForBiteTimeoutMs;
+            var timedTask = new TimedAction((a) => { logger.Info("Fishing timed out!"); }, waitTimeoutMs, waitTimeoutMs / 1000);
 
             // Wait for the bobber to move
             while (isEnabled)
@@ -127,10 +131,9 @@ namespace FishingFun
 
         public static void Sleep(int ms)
         {
-            ms+=random.Next(0, 225);
+            ms += random.Next(0, 225);
 
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            var sw = Stopwatch.StartNew();
             while (sw.Elapsed.TotalMilliseconds < ms)
             {
                 FlushBuffers();
